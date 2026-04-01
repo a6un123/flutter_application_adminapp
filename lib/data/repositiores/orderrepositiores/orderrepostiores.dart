@@ -5,7 +5,6 @@ class OrderRepository {
   final _db = FirebaseFirestore.instance;
   final String _collection = 'orders';
 
-  // Stream ALL orders in real-time
   Stream<List<OrderModel>> getAllOrders() {
     return _db
         .collection(_collection)
@@ -17,15 +16,31 @@ class OrderRepository {
         );
   }
 
-  // Update order status
+  // Update status + save date timestamp
   Future<void> updateStatus(String orderId, String status) async {
-    await _db.collection(_collection).doc(orderId).update({'status': status});
+    // Map status to date field
+    final dateField = switch (status) {
+      'confirmed' => 'confirmedAt',
+      'shipped' => 'shippedAt',
+      'delivered' => 'deliveredAt',
+      'cancelled' => 'cancelledAt',
+      _ => null,
+    };
+
+    final Map<String, dynamic> updateData = {'status': status};
+
+    // Add date timestamp for this status
+    if (dateField != null) {
+      updateData[dateField] = FieldValue.serverTimestamp();
+    }
+
+    await _db.collection(_collection).doc(orderId).update(updateData);
   }
 
-  // Cancel order
   Future<void> cancelOrder(String orderId) async {
     await _db.collection(_collection).doc(orderId).update({
       'status': 'cancelled',
+      'cancelledAt': FieldValue.serverTimestamp(),
     });
   }
 }

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_application_adminapp/data/repositiores/userrepositiores/userrepositiores.dart';
+import 'package:flutter_application_adminapp/data/model/usersmodel/usersmodel.dart';
 
 abstract class AdminUserState extends Equatable {
   const AdminUserState();

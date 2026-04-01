@@ -7,22 +7,34 @@ class OrderModel {
   final String userId;
   final String userName;
   final String userEmail;
+  final String userPhone; // ← NEW
   final List<Cartmodel> items;
   final double totalPrice;
   final String status;
   final DateTime orderedAt;
   final String address;
 
+  // ── Status dates ─────────────────────────────────
+  final DateTime? confirmedAt; // ← NEW
+  final DateTime? shippedAt; // ← NEW
+  final DateTime? deliveredAt; // ← NEW
+  final DateTime? cancelledAt; // ← NEW
+
   OrderModel({
     required this.orderId,
     required this.userId,
     required this.userName,
     required this.userEmail,
+    this.userPhone = '',
     required this.items,
     required this.totalPrice,
     required this.status,
     required this.orderedAt,
     required this.address,
+    this.confirmedAt,
+    this.shippedAt,
+    this.deliveredAt,
+    this.cancelledAt,
   });
 
   factory OrderModel.fromFirestore(DocumentSnapshot doc) {
@@ -32,6 +44,7 @@ class OrderModel {
       userId: data['userId'] ?? '',
       userName: data['userName'] ?? '',
       userEmail: data['userEmail'] ?? '',
+      userPhone: data['userPhone'] ?? '',
       items: (data['items'] as List)
           .map(
             (item) => Cartmodel(
@@ -52,7 +65,49 @@ class OrderModel {
       status: data['status'] ?? 'pending',
       orderedAt: (data['orderedAt'] as Timestamp).toDate(),
       address: data['address'] ?? '',
+      confirmedAt: data['confirmedAt'] != null
+          ? (data['confirmedAt'] as Timestamp).toDate()
+          : null,
+      shippedAt: data['shippedAt'] != null
+          ? (data['shippedAt'] as Timestamp).toDate()
+          : null,
+      deliveredAt: data['deliveredAt'] != null
+          ? (data['deliveredAt'] as Timestamp).toDate()
+          : null,
+      cancelledAt: data['cancelledAt'] != null
+          ? (data['cancelledAt'] as Timestamp).toDate()
+          : null,
     );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'orderId': orderId,
+      'userId': userId,
+      'userName': userName,
+      'userEmail': userEmail,
+      'userPhone': userPhone,
+      'items': items
+          .map(
+            (item) => {
+              'product': {
+                'id': item.product.id,
+                'name': item.product.name,
+                'description': item.product.description,
+                'price': item.product.price,
+                'imageUrl': item.product.imageUrl,
+                'category': item.product.category,
+                'rating': item.product.rating,
+              },
+              'quantity': item.quantity,
+            },
+          )
+          .toList(),
+      'totalPrice': totalPrice,
+      'status': status,
+      'orderedAt': Timestamp.fromDate(orderedAt),
+      'address': address,
+    };
   }
 
   OrderModel copyWith({String? status}) {
@@ -61,11 +116,16 @@ class OrderModel {
       userId: userId,
       userName: userName,
       userEmail: userEmail,
+      userPhone: userPhone,
       items: items,
       totalPrice: totalPrice,
       status: status ?? this.status,
       orderedAt: orderedAt,
       address: address,
+      confirmedAt: confirmedAt,
+      shippedAt: shippedAt,
+      deliveredAt: deliveredAt,
+      cancelledAt: cancelledAt,
     );
   }
 }

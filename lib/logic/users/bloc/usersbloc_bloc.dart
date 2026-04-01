@@ -1,7 +1,8 @@
-import 'package:flutter_application_adminapp/data/repositiores/userrepositiores/userrepositiores.dart';
-import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_event.dart';
-import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_state.dart';
+import 'package:flutter_application_adminapp/data/repositiores/userrepositiores/userrepositiories.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'usersbloc_event.dart';
+import 'usersbloc_state.dart';
 
 class AdminUserBloc extends Bloc<AdminUserEvent, AdminUserState> {
   final UserRepository _repository;

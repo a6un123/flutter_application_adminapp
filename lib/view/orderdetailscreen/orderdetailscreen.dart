@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_adminapp/data/model/ordermodeles/ordermodel.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:flutter_application_adminapp/logic/order/bloc/orderbloc_bloc.dart';
 import 'package:flutter_application_adminapp/logic/order/bloc/orderbloc_event.dart';
 import 'package:flutter_application_adminapp/logic/order/bloc/orderbloc_state.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   final OrderModel order;
   const OrderDetailScreen({super.key, required this.order});
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Not yet';
+    return '${date.day}/${date.month}/${date.year}  '
+        '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +52,7 @@ class OrderDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Order ID + Status
+              // Order ID card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -66,8 +73,7 @@ class OrderDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${order.orderedAt.day}/${order.orderedAt.month}/${order.orderedAt.year}  '
-                      '${order.orderedAt.hour}:${order.orderedAt.minute.toString().padLeft(2, '0')}',
+                      _formatDate(order.orderedAt),
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
@@ -78,7 +84,7 @@ class OrderDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // User Details
+              // ── Customer Details ──────────────────
               _SectionCard(
                 title: 'Customer Details',
                 icon: Icons.person_outline,
@@ -86,13 +92,19 @@ class OrderDetailScreen extends StatelessWidget {
                   children: [
                     _InfoRow(label: 'Name', value: order.userName),
                     _InfoRow(label: 'Email', value: order.userEmail),
+                    _InfoRow(
+                      label: 'Phone',
+                      value: order.userPhone.isNotEmpty
+                          ? order.userPhone
+                          : 'Not provided',
+                    ),
                     _InfoRow(label: 'Address', value: order.address),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Order Items
+              // ── Order Items ───────────────────────
               _SectionCard(
                 title: 'Order Items',
                 icon: Icons.shopping_bag_outlined,
@@ -161,7 +173,7 @@ class OrderDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Total
+              // ── Total ─────────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -189,16 +201,62 @@ class OrderDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+
+              // ── Status Timeline ───────────────────
+              _SectionCard(
+                title: 'Order Timeline',
+                icon: Icons.timeline_outlined,
+                child: Column(
+                  children: [
+                    _TimelineRow(
+                      label: 'Order Placed',
+                      date: _formatDate(order.orderedAt),
+                      isCompleted: true,
+                      color: Colors.indigo,
+                      icon: Icons.shopping_bag_outlined,
+                    ),
+                    _TimelineRow(
+                      label: 'Confirmed',
+                      date: _formatDate(order.confirmedAt),
+                      isCompleted: order.confirmedAt != null,
+                      color: Colors.blue,
+                      icon: Icons.check_circle_outline,
+                    ),
+                    _TimelineRow(
+                      label: 'Shipped',
+                      date: _formatDate(order.shippedAt),
+                      isCompleted: order.shippedAt != null,
+                      color: Colors.purple,
+                      icon: Icons.local_shipping_outlined,
+                    ),
+                    _TimelineRow(
+                      label: 'Delivered',
+                      date: _formatDate(order.deliveredAt),
+                      isCompleted: order.deliveredAt != null,
+                      color: Colors.green,
+                      icon: Icons.done_all,
+                    ),
+                    if (order.cancelledAt != null)
+                      _TimelineRow(
+                        label: 'Cancelled',
+                        date: _formatDate(order.cancelledAt),
+                        isCompleted: true,
+                        color: Colors.red,
+                        icon: Icons.cancel_outlined,
+                      ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
 
-              // Update Status
+              // ── Update Status Buttons ─────────────
               const Text(
                 'Update Order Status',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
 
-              // Status buttons
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -283,6 +341,7 @@ class OrderDetailScreen extends StatelessWidget {
   }
 }
 
+// ── Widgets ───────────────────────────────────────────────
 class _SectionCard extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -355,6 +414,67 @@ class _InfoRow extends StatelessWidget {
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  final String label;
+  final String date;
+  final bool isCompleted;
+  final Color color;
+  final IconData icon;
+
+  const _TimelineRow({
+    required this.label,
+    required this.date,
+    required this.isCompleted,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isCompleted ? color : Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: isCompleted ? Colors.white : Colors.grey[400],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isCompleted ? Colors.black87 : Colors.grey[400],
+                  ),
+                ),
+                Text(
+                  date,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ),
+          if (isCompleted) Icon(Icons.check, size: 16, color: color),
         ],
       ),
     );

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_adminapp/data/repositiores/authrepositiores/authrepositiores.dart';
 import 'package:flutter_application_adminapp/data/repositiores/orderrepositiores/orderrepostiores.dart';
 import 'package:flutter_application_adminapp/data/repositiores/productrepositiories/productrepositiores.dart';
-import 'package:flutter_application_adminapp/data/repositiores/userrepositiores/userrepositiores.dart';
+import 'package:flutter_application_adminapp/data/repositiores/userrepositiores/userrepositiories.dart';
 import 'package:flutter_application_adminapp/firebase_options.dart';
 import 'package:flutter_application_adminapp/logic/auth/bloc/authbloc_bloc.dart';
 import 'package:flutter_application_adminapp/logic/auth/bloc/authbloc_event.dart';

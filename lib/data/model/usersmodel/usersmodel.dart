@@ -5,14 +5,20 @@ class UserModel {
   final String name;
   final String email;
   final String role;
+  final String phone;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String userAltPhone;
 
   const UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.role,
+    this.phone = '',
+    this.userAltPhone = '',
     this.createdAt,
+    this.updatedAt,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -22,36 +28,32 @@ class UserModel {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       role: data['role'] ?? 'user',
+      phone: data['phone'] ?? '',
+      userAltPhone: data["userAltPhone"] ?? "",
       createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as dynamic).toDate()
+          ? (data['createdAt'] as Timestamp).toDate()
+          : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
           : null,
     );
   }
-}
 
-class UserRepository {
-  final _db = FirebaseFirestore.instance;
-
-  // Stream all users
-  Stream<List<UserModel>> getAllUsers() {
-    return _db
-        .collection('users')
-        .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
-        );
-  }
-
-  // Stream only customers
-  Stream<List<UserModel>> getCustomers() {
-    return _db
-        .collection('users')
-        .where('role', isEqualTo: 'user')
-        .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
-        );
+  UserModel copyWith({
+    String? name,
+    String? email,
+    String? role,
+    String? phone,
+  }) {
+    return UserModel(
+      uid: uid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      phone: phone ?? this.phone,
+      userAltPhone: userAltPhone,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 }
