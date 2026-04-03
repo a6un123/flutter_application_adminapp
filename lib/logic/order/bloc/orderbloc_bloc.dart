@@ -1,7 +1,7 @@
-import 'package:flutter_application_adminapp/data/repositiores/orderrepositiores/orderrepostiores.dart';
-import 'package:flutter_application_adminapp/logic/order/bloc/orderbloc_event.dart';
-import 'package:flutter_application_adminapp/logic/order/bloc/orderbloc_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_application_adminapp/data/repositiores/orderrepositiores/orderrepostiores.dart';
+import 'orderbloc_event.dart';
+import 'orderbloc_state.dart';
 
 class AdminOrderBloc extends Bloc<AdminOrderEvent, AdminOrderState> {
   final OrderRepository _repository;
@@ -28,11 +28,20 @@ class AdminOrderBloc extends Bloc<AdminOrderEvent, AdminOrderState> {
     UpdateOrderStatus event,
     Emitter<AdminOrderState> emit,
   ) async {
+    // Keep current orders while updating
+    final currentOrders = state is AdminOrderLoaded
+        ? (state as AdminOrderLoaded).orders
+        : [];
     try {
       await _repository.updateStatus(event.orderId, event.status);
-      emit(AdminOrderSuccess());
+      // Don't emit success — stream will auto-update
+      // emit.forEach keeps listening so UI updates automatically
     } catch (e) {
       emit(AdminOrderError(e.toString()));
+      // Restore orders on error
+      if (currentOrders.isNotEmpty) {
+        emit(AdminOrderLoaded(List.from(currentOrders)));
+      }
     }
   }
 
@@ -40,11 +49,17 @@ class AdminOrderBloc extends Bloc<AdminOrderEvent, AdminOrderState> {
     CancelOrder event,
     Emitter<AdminOrderState> emit,
   ) async {
+    final currentOrders = state is AdminOrderLoaded
+        ? (state as AdminOrderLoaded).orders
+        : [];
     try {
       await _repository.cancelOrder(event.orderId);
-      emit(AdminOrderSuccess());
+      // Stream auto-updates — no need to emit
     } catch (e) {
       emit(AdminOrderError(e.toString()));
+      if (currentOrders.isNotEmpty) {
+        emit(AdminOrderLoaded(List.from(currentOrders)));
+      }
     }
   }
 }

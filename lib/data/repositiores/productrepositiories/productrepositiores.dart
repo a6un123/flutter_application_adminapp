@@ -8,7 +8,7 @@ class ProductRepository {
   final _storage = FirebaseStorage.instance;
   final String _collection = 'products';
 
-  // Stream all products in real-time
+  // Stream all products
   Stream<List<Productmodel>> getProducts() {
     return _db
         .collection(_collection)
@@ -20,10 +20,9 @@ class ProductRepository {
         );
   }
 
-  // Add new product with optional image
+  // Add product
   Future<void> addProduct(Productmodel product, {File? imageFile}) async {
     String imageUrl = product.imageUrl;
-
     if (imageFile != null) {
       final ref = _storage.ref().child(
         'products/${DateTime.now().millisecondsSinceEpoch}.jpg',
@@ -31,14 +30,13 @@ class ProductRepository {
       await ref.putFile(imageFile);
       imageUrl = await ref.getDownloadURL();
     }
-
     await _db.collection(_collection).add({
       ...product.toFirestore(),
       'imageUrl': imageUrl,
     });
   }
 
-  // Update product details
+  // Update product
   Future<void> updateProduct(String id, Map<String, dynamic> data) async {
     await _db.collection(_collection).doc(id).update(data);
   }

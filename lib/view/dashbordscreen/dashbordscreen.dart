@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_adminapp/logic/auth/bloc/authbloc_bloc.dart';
 import 'package:flutter_application_adminapp/logic/auth/bloc/authbloc_event.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_application_adminapp/logic/product/bloc/product_bloc.dar
 import 'package:flutter_application_adminapp/logic/product/bloc/product_state.dart';
 import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_bloc.dart';
 import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_state.dart';
+import 'package:flutter_application_adminapp/view/notificationscreen/notificationscreen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,6 +32,51 @@ class DashboardScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
+          // ── Notification Bell ───────────────────
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('admin_notifications')
+                .where('isRead', isEqualTo: false)
+                .snapshots(),
+            builder: (context, snapshot) {
+              final count = snapshot.data?.docs.length ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminNotificationScreen(),
+                      ),
+                    ),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+
+          // ── Logout ─────────────────────────────
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthBloc>().add(LogoutEvent()),
@@ -41,7 +88,7 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Welcome Card ──────────────────────────
+            // ── Welcome Card ──────────────────────
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -83,7 +130,62 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ── Stats Row 1 ───────────────────────────
+            // ── Unread Notifications Banner ───────
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('admin_notifications')
+                  .where('isRead', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                final count = snapshot.data?.docs.length ?? 0;
+                if (count == 0) return const SizedBox();
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminNotificationScreen(),
+                    ),
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.notifications_active_outlined,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'You have $count unread notification${count > 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: Colors.orange,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // ── Stats Row 1 ───────────────────────
             Row(
               children: [
                 Expanded(
@@ -122,7 +224,7 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ── Stats Row 2 ───────────────────────────
+            // ── Stats Row 2 ───────────────────────
             Row(
               children: [
                 Expanded(
@@ -165,7 +267,7 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ── Stats Row 3 — Customers ───────────────
+            // ── Stats Row 3 — Customers ───────────
             BlocBuilder<AdminUserBloc, AdminUserState>(
               builder: (context, state) {
                 final count = state is AdminUserLoaded ? state.users.length : 0;
@@ -180,7 +282,7 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── Quick Actions ─────────────────────────
+            // ── Quick Actions ─────────────────────
             const Text(
               'Quick Actions',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -236,11 +338,27 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 12),
+
+            // ── Notifications Action Card ─────────
+            _ActionCard(
+              title: 'Notifications',
+              subtitle: 'View all alerts and updates',
+              icon: Icons.notifications_outlined,
+              color: Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminNotificationScreen(),
+                ),
+              ),
+            ),
           ],
         ),
       ),
 
-      // ── Bottom Navigation ─────────────────────────
+      // ── Bottom Navigation ─────────────────────
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: Colors.indigo,
@@ -274,7 +392,7 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-// ── Stat Card ─────────────────────────────────────────────
+// ── Stat Card ──────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
@@ -331,7 +449,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Action Card ───────────────────────────────────────────
+// ── Action Card ────────────────────────────────────────────
 class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;

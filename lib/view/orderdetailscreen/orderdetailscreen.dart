@@ -36,7 +36,6 @@ class OrderDetailScreen extends StatelessWidget {
                 backgroundColor: Colors.green,
               ),
             );
-            Navigator.pop(context);
           }
           if (state is AdminOrderError) {
             ScaffoldMessenger.of(context).showSnackBar(

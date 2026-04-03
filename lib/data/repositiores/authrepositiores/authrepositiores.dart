@@ -12,12 +12,25 @@ class AuthRepository {
       email: email.trim(),
       password: password.trim(),
     );
-    return credential.user;
+    final user = credential.user;
+    if (user != null) {
+      // Check role
+      final role = await getUserRole(user.uid);
+      if (role != 'admin') {
+        await _auth.signOut();
+        throw Exception('Access denied. Admin accounts only.');
+      }
+    }
+    return user;
   }
 
   Future<String> getUserRole(String uid) async {
-    final doc = await _db.collection('users').doc(uid).get();
-    return doc.data()?['role'] ?? 'user';
+    try {
+      final doc = await _db.collection('users').doc(uid).get();
+      return doc.data()?['role'] ?? 'user';
+    } catch (e) {
+      return 'user';
+    }
   }
 
   Future<void> logout() async {

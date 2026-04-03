@@ -14,12 +14,14 @@ import 'package:flutter_application_adminapp/logic/product/bloc/product_event.da
 import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_bloc.dart';
 import 'package:flutter_application_adminapp/logic/users/bloc/usersbloc_event.dart';
 import 'package:flutter_application_adminapp/router/approuter.dart';
+import 'package:flutter_application_adminapp/services/notificationservices.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService.initialize();
   runApp(const MyApp());
 }
 
