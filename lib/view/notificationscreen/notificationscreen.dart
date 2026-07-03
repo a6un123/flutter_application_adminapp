@@ -29,6 +29,7 @@ class AdminNotificationScreen extends StatelessWidget {
         // ← Simple query without orderBy to avoid index issues
         stream: FirebaseFirestore.instance
             .collection('admin_notifications')
+            .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

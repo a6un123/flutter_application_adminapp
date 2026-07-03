@@ -37,6 +37,7 @@ class DashboardScreen extends StatelessWidget {
             stream: FirebaseFirestore.instance
                 .collection('admin_notifications')
                 .where('isRead', isEqualTo: false)
+                .orderBy('createdAt', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
               final count = snapshot.data?.docs.length ?? 0;
